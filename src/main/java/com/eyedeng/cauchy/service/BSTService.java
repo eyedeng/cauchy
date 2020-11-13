@@ -3,27 +3,40 @@ package com.eyedeng.cauchy.service;
 import com.eyedeng.cauchy.constant.Color;
 import com.eyedeng.cauchy.constant.SVG;
 import com.eyedeng.cauchy.domain.*;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-
+@Service
 public class BSTService {
 
     public static final int FullBTHei = 6;
     /** only data member is root of BST */
     private Node root = null;
 
+    private class Node {
+        int data;
+        Node left;
+        Node right;
+
+        Circle circle;
+
+        Node(int d) {
+            data = d;
+            left = null;
+            right = null;
+            circle = null;
+        }
+    }
 
 
     /** main function for tests */
     public static void main(String[] args) {
-//        Integer[] array = {84, 24, 57, 87, 13, 9, 56};
-//        BSTService tree = new BSTService();
-//        for (int i = 0; i < array.length; i++) {
-//            tree.add(array[i]);
-//        }
+        Integer[] array = {84, 24, 57, 87, 13, 9, 56};
+        BSTService tree = new BSTService();
+        tree.create(array);
 //        tree.inorder();
 
 //        List<Circle> circles = new ArrayList<>();
@@ -35,14 +48,15 @@ public class BSTService {
 //                circles) {
 //            System.out.println(c.getCx());  // 1 \n 3
 //        }
+
     }
 
     public TreeFrame create(Integer[] array) {
 
-        array = new Integer[]{84, 24, 57, 87, 13, 9, 56};
+        //array = new Integer[]{84, 24, 57, 87, 13, 9, 56};
         BSTService bst = new BSTService();
-        for (int i = 0; i < array.length; i++) {
-            bst.add(array[i]);
+        for (Integer integer : array) {
+            bst.add(integer);
         }
 
         TreeFrame treeFrame = new TreeFrame();
@@ -52,13 +66,13 @@ public class BSTService {
         List<Circle> vertexGroup = new ArrayList<>(array.length);
         List<Text> vertexTextGroup = new ArrayList<>(array.length);
 
+        int r = 15;
+        // 孩子节点与其父节点高度差
         int heiDif = 80;
-        // 叶节点与其父节点水平偏移量
-        int minOff = 25;
-        int offset = (int) (minOff * Math.pow(2, FullBTHei - 2));
-        int cx = SVG.WIDTH;
+        // 孩子节点与其父节点水平偏移量
+        int offset = (int) (r * Math.pow(2, FullBTHei - 2));
+        int cx = SVG.WIDTH / 2;
         int cy = heiDif;
-        int r = 18;
         int fill = Color.WHITE;
         int stroke = Color.BLACK;
         
@@ -68,8 +82,8 @@ public class BSTService {
         Text data = new Text(cx, cy, String.valueOf(bst.root.data));
         Line edge;
         // 让node携带更多信息
-        bst.root.circleX = cx;
-        bst.root.circleY = cy;
+        bst.root.circle = node;
+
         vertexGroup.add(node);
         vertexTextGroup.add(data);
 
@@ -82,35 +96,83 @@ public class BSTService {
             level++;
             count = 0;
             while (c-- > 0) {
-                Node tempNode = queue.poll();
-                System.out.print(tempNode.data + " ");
+                Node parent = queue.poll();
+//                System.out.print(parent.data + " ");
 
-                if (tempNode.left != null) {
-                    node = new Circle(cx - offset / level, cy + heiDif * level, r, fill, stroke);
-                    data = new Text(cx - offset / level, cy + heiDif * level, String.valueOf(tempNode.left.data));
-
-                    vertexGroup.add(node);
-                    vertexTextGroup.add(data);
-                    queue.add(tempNode.left);
+                if (parent.left != null) {
+                    cx = parent.circle.getCx() - offset;
+                    setGraph(edgeGroup, vertexGroup, vertexTextGroup, heiDif, cx, cy + heiDif * level,
+                            r, fill, stroke, level, parent, true);
+                    queue.add(parent.left);
                     count++;
                 }
 
-                if (tempNode.right != null) {
-                    node = new Circle(cx + offset / level, cy + heiDif * level, r, fill, stroke);
-                    data = new Text(cx + offset / level, cy + heiDif * level, String.valueOf(tempNode.right.data));
-                    vertexGroup.add(node);
-                    vertexTextGroup.add(data);
-                    queue.add(tempNode.right);
+                if (parent.right != null) {
+                    cx = parent.circle.getCx() + offset;
+                    setGraph(edgeGroup, vertexGroup, vertexTextGroup, heiDif, cx, cy + heiDif * level,
+                            r, fill, stroke, level, parent, false);
+                    queue.add(parent.right);
                     count++;
                 }
             }
+            offset /= 2;
         }
 
-
+        tree.setEdgeGroup(edgeGroup);
+        tree.setVertexGroup(vertexGroup);
+        tree.setVertexTextGroup(vertexTextGroup);
+//        System.out.println(tree);
+        frames.add(tree);
         treeFrame.setFrames(frames);
         return treeFrame;
     }
 
+    private void setGraph(List<Line> edgeGroup, List<Circle> vertexGroup, List<Text> vertexTextGroup,
+                          int heiDif, int cx, int cy, int r, int fill, int stroke, int level, Node parent, boolean L) {
+        Circle node;
+        Text data;
+        Line edge;
+        node = new Circle(cx, cy, r, fill, stroke);
+        data = new Text(cx, cy, String.valueOf(L ? parent.left.data : parent.right.data));
+        edge = new Line(parent.circle.getCx(), parent.circle.getCy(), cx, cy, stroke);
+        if (L)
+            parent.left.circle = node;
+        else
+            parent.right.circle = node;
+        vertexGroup.add(node);
+        vertexTextGroup.add(data);
+        edgeGroup.add(edge);
+    }
+
+    /*
+    不易确定当前v、e在group数组里的位置,d3不能select属性有变的某个元素
+     */
+    private void inOrder(Node node, List<Tree> frames) {
+        if (node == null) {
+            return;
+        }
+        Tree tree = frames.get(frames.size() - 1);
+//        List<Line> edgeGroup = new ArrayList<>(array.length-1);
+//        List<Circle> vertexGroup = new ArrayList<>(array.length);
+//        List<Text> vertexTextGroup = new ArrayList<>(array.length);
+        if (node.left != null) {
+            inOrder(node.left, frames);
+        }
+
+        System.out.print(node.data + " ");
+        if (node.right != null) {
+            inOrder(node.right, frames);
+        }
+    }
+
+    public TreeFrame inorder(Tree initTree) {
+        TreeFrame treeFrame = new TreeFrame();
+        List<Tree> frames = new ArrayList<>();
+        frames.add(initTree);
+        inOrder(this.root, frames);
+        treeFrame.setFrames(frames);
+        return treeFrame;
+    }
 
 
     /**
@@ -210,18 +272,7 @@ public class BSTService {
      *
      * @param node the root node
      */
-    private void inOrder(Node node) {
-        if (node == null) {
-            return;
-        }
-        if (node.left != null) {
-            inOrder(node.left);
-        }
-        System.out.print(node.data + " ");
-        if (node.right != null) {
-            inOrder(node.right);
-        }
-    }
+
 
     /**
      * Serach recursively if the given value is present in BST or not.
@@ -260,12 +311,7 @@ public class BSTService {
         this.root = delete(this.root, data);
     }
 
-    /** To call inorder traversal on tree */
-    public void inorder() {
-        System.out.println("Inorder traversal of this tree is:");
-        inOrder(this.root);
-        System.out.println(); // for next line
-    }
+
 
     /** To call postorder traversal on tree */
     public void postorder() {
@@ -296,21 +342,5 @@ public class BSTService {
         return false;
     }
 
-    /** The Node class used for building binary search tree */
-    private static class Node {
-        int data;
-        Node left;
-        Node right;
 
-        int circleX,circleY;
-
-        /** Constructor with data as parameter */
-        Node(int d) {
-            data = d;
-            left = null;
-            right = null;
-            circleX = 0;
-            circleY = 0;
-        }
-    }
 }

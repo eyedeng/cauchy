@@ -4,6 +4,6 @@ import lombok.Data;
 
 import java.util.List;
 @Data
-public class Array<T extends Comparable<T>> {
+public class Array {
     private Integer[] array;
 }
