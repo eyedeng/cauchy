@@ -3,7 +3,8 @@ $(document).ready(() => {
     $('#get').click(() => {
         console.log('get click');
         $.ajax({
-            url: "getGreet"
+            url: "getGreet",
+            data: {myname: "eyedeng"}
         }).then(function(data) {
             console.log(data);
         });

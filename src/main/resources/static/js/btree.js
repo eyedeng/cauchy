@@ -7,14 +7,22 @@ const Color = {
     6: 'black',
     7: 'white'
 };
-//const treeFrame =
-//{"frames":[{"edgeGroup":[{"x1":500,"y1":80,"x2":260,"y2":160,"stroke":6},{"x1":500,"y1":80,"x2":740,"y2":160,"stroke":6},{"x1":260,"y1":160,"x2":140,"y2":240,"stroke":6},{"x1":260,"y1":160,"x2":380,"y2":240,"stroke":6},{"x1":140,"y1":240,"x2":60,"y2":320,"stroke":6},{"x1":380,"y1":240,"x2":300,"y2":320,"stroke":6}],"vertexGroup":[{"cx":500,"cy":80,"r":15,"fill":7,"stroke":6},{"cx":260,"cy":160,"r":15,"fill":7,"stroke":6},{"cx":740,"cy":160,"r":15,"fill":7,"stroke":6},{"cx":140,"cy":240,"r":15,"fill":7,"stroke":6},{"cx":380,"cy":240,"r":15,"fill":7,"stroke":6},{"cx":60,"cy":320,"r":15,"fill":7,"stroke":6},{"cx":300,"cy":320,"r":15,"fill":7,"stroke":6}],"vertexTextGroup":[{"x":500,"y":80,"text":"84"},{"x":260,"y":160,"text":"24"},{"x":740,"y":160,"text":"87"},{"x":140,"y":240,"text":"13"},{"x":380,"y":240,"text":"57"},{"x":60,"y":320,"text":"9"},{"x":300,"y":320,"text":"56"}]}]};
 const Width = 1000;
-const Height = 600;
+const Height = 570;
 const svg = d3.select('svg');
 svg.attr('width', Width)
     .attr('height', Height);
 
+let frames;
+let tree;
+let idx = 0;
+// 操作状态:create/inorder/search
+let state;
+const States = {
+    create: 1,
+    inorder: 2,
+    search: 3
+};
 document.querySelector("#create").onclick = () => {
     // console.log('按');
     let input = document.querySelector("#input").value;
@@ -26,13 +34,16 @@ document.querySelector("#create").onclick = () => {
 
     $.ajax({
         type : "POST",
-        contentType : "application/json",
+        contentType : "application/json",  // 必需
         url : "api/btree/create",
         data : JSON.stringify(formData),
         dataType : 'json',
         success : function(response) {
             // console.log(response);
-            creatDraw(response.frames[0]);
+            frames = response.frames;
+            idx = 0;
+            state = States.create;
+            creatDraw();
         },
         error : function(e) {
             alert("Error!");
@@ -40,16 +51,36 @@ document.querySelector("#create").onclick = () => {
         }
     });
 };
-let chs;
+let changes;
 document.querySelector("#inorder").onclick = () => {
 
     $.ajax({
         type : "GET",
         url : "api/btree/inOrder",
         success : function(response) {
-            chs = response.changes;
-            console.log(chs);
-            inOrderDraw(response.changes);
+            changes = response.changes;
+            state = States.inorder;
+            inOrderDraw();
+        },
+        error : function(e) {
+            alert("Error!");
+            console.log("ERROR: ", e);
+        }
+    });
+};
+document.querySelector("#search").onclick = () => {
+    let num = document.querySelector("#num").value;
+    num = parseInt(num);
+    $.ajax({
+        type : "GET",
+        url : "api/btree/search",
+        data: {num: num},
+        success : function(response) {
+            frames = response.frames;
+            // console.log(frames);
+            idx = 0;
+            state = States.search;
+            drawFrames();
         },
         error : function(e) {
             alert("Error!");
@@ -58,14 +89,60 @@ document.querySelector("#inorder").onclick = () => {
     });
 };
 
-// tree = treeFrame.frames[0];
+let durationT = 1000;
+let timeout = 1000;
+let isPause = false;
+document.querySelector('#pause').onclick = () => {
+    if (!isPause)
+        isPause = true;
+};
 
-function creatDraw(tree) {
+document.querySelector('#play').onclick = () => {
+    if (isPause) {
+        isPause = false;
+        if (state === States.inorder) {
+            inOrderDraw();
+        }else if (state === States.search) {
+            drawFrames();
+        }
+    }
+};
+// TODO 不能恢复此帧属性,后退一帧.还是需要整颗树的数据？
+document.querySelector('#preFrame').onclick = () => {
+    // pause时
+    if (isPause) {
+        idx = idx - 1;
+        drawOneFrame();
+    }
+};
+document.querySelector('#nextFrame').onclick = () => {
+    // pause时
+    if (isPause) {
+        idx = idx + 1;
+        if (state === States.inorder) {
+            drawByIdx();
+        }else if (state === States.search) {
+            drawOneFrame();
+        }
+    }
+};
+document.querySelector('#clearing').onclick = () => {
+    if (idx !== 0) {
+        idx = 0;
+        drawOneFrame();
+    }
+};
+
+let vertexGroup ;
+let edgeGroup;
+let vertexTextGroup ;
+function creatDraw() {
+    tree = frames[idx];
     // console.log(tree);
     d3.selectAll('g').remove();
-    const vertexGroup = svg.append('g').attr('id', 'v');
-    const edgeGroup = svg.append('g').attr('id', 'e');
-    const vertexTextGroup = svg.append('g').attr('id', 't');
+    vertexGroup = svg.append('g').attr('id', 'v');
+    edgeGroup = svg.append('g').attr('id', 'e');
+    vertexTextGroup = svg.append('g').attr('id', 't');
     // const r = 15;
     vertexGroup.selectAll('circle').data(tree.vertexGroup).enter().append('circle')
         .attr('cx', d => d.cx )
@@ -80,6 +157,7 @@ function creatDraw(tree) {
         .attr('x2', d => d.x2 )
         .attr('y2', d => d.y2 )
         .attr('stroke', d => Color[d.stroke] )
+        .attr('stroke-width', 1)
         .attr('id', d => d.id);
     vertexTextGroup.selectAll('text').data(tree.vertexTextGroup).enter().append('text')
         .attr('x', d => d.x - 5)
@@ -89,44 +167,95 @@ function creatDraw(tree) {
         .attr('id', d => d.id);
 }
 
-function inOrderDraw(changes) {
-    let idx = 0;
-    let durationT = 1000;
-    let intervalID = setInterval(() => {
-        console.log(idx);
-        if (idx >= changes.length) {
-            clearInterval(intervalID);
-        } else {
-            let circle = changes[idx].circle;
-            let line = changes[idx].line;
-            let text = changes[idx].text;
-            if (circle != null) {
-                d3.select(`#${circle.id}`)
-                    .transition()
-                    .duration(durationT)
-                    .attr('stroke', Color[circle.stroke])
-                    .attr('fill', Color[circle.fill]);
-            }
-            if (text != null) {
-                d3.select(`#${text.id}`)
-                    .transition()
-                    .duration(durationT)
-                    .attr('stroke', Color[text.stroke]);
-            }
-            if (line != null) {
-                d3.select(`#${line.id}`)
-                    .transition()
-                    .duration(durationT)
-                    .attr('stroke', Color[line.stroke])
-                    .attr('stroke-width', 3);
-            }
-        }
-        idx = idx + 1;
-    }, 1000);
+function drawByIdx() {
+    console.log(idx);
+    let circle = changes[idx].circle;
+    let line = changes[idx].line;
+    let text = changes[idx].text;
+    if (circle != null) {
+        d3.select(`#${circle.id}`)
+            .transition()
+            .duration(durationT)
+            .attr('stroke', Color[circle.stroke])
+            .attr('fill', Color[circle.fill]);
+    }
+    if (text != null) {
+        d3.select(`#${text.id}`)
+            .transition()
+            .duration(durationT)
+            .attr('stroke', Color[text.stroke]);
+    }
+    if (line != null) {
+        d3.select(`#${line.id}`)
+            .transition()
+            .duration(durationT)
+            .attr('stroke', Color[line.stroke])
+            .attr('stroke-width', 3);
+    }
 }
 
+function inOrderDraw() {
 
+    let intervalID = setInterval(() => {
+        if (idx >= changes.length || isPause) {
+            console.log('clear', idx);
+            // 当前帧为idx-1
+            if (isPause) {
+                idx = idx - 1;
+            }
+            clearInterval(intervalID);
+        } else {
+            drawByIdx();
+            idx = idx + 1;
+        }
+    }, timeout);
+}
 
+function drawFrames() {
+    let intervalID = setInterval(() => {
+        if (idx >= frames.length || isPause) {
+            console.log('clear', idx);
+            // 当前帧为idx-1
+            if (isPause) {
+                idx = idx - 1;
+            }
+            clearInterval(intervalID);
+        } else {
+            drawOneFrame();
+            idx = idx + 1;
+        }
+    }, timeout);
+}
+
+function drawOneFrame() {
+    console.log(idx);
+    tree = frames[idx];
+    vertexGroup.selectAll('circle').data(tree.vertexGroup)
+        .transition()
+        .duration(durationT)
+        .attr('cx', d => d.cx )
+        .attr('cy', d => d.cy )
+        .attr('r', d => d.r )
+        .attr('fill', d => Color[d.fill])
+        .attr('stroke', d => Color[d.stroke] );
+    edgeGroup.selectAll('line').data(tree.edgeGroup)
+        .transition()
+        .duration(durationT)
+        .attr('x1', d => d.x1 )
+        .attr('y1', d => d.y1 )
+        .attr('x2', d => d.x2 )
+        .attr('y2', d => d.y2 )
+        .attr('stroke', d => Color[d.stroke] )
+        .attr('stroke-width', 1);
+    vertexTextGroup.selectAll('text').data(tree.vertexTextGroup)
+        .transition()
+        .duration(durationT)
+        .attr('x', d => d.x - 5)
+        .attr('y', d => d.y + 5)
+        .attr('stroke', d => Color[d.stroke])
+        .text(d => d.text);
+
+}
 
     // let h = 80, r = 18;
 

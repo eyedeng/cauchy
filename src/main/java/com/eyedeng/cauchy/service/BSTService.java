@@ -15,7 +15,11 @@ public class BSTService {
     public static final int FullBTHei = 6;
     private Node root = null;
 
-    // TODO %d 不能作id, line's stroke don't work
+    private Tree initTree;
+    // 邻接矩阵存边的id
+//    private int[][] adjM = new int[64][64];
+
+    // CSS id
     String circleIdTemp = "C%d";
     String lineIdTemp = "%sC%d";
     String textIdTemp = "TC%d";
@@ -64,7 +68,7 @@ public class BSTService {
 
         TreeFrame treeFrame = new TreeFrame();
         List<Tree> frames = new ArrayList<>();
-        Tree tree = new Tree();
+        initTree = new Tree();
         List<Line> edgeGroup = new ArrayList<>();
         List<Circle> vertexGroup = new ArrayList<>();
         List<Text> vertexTextGroup = new ArrayList<>();
@@ -121,11 +125,11 @@ public class BSTService {
             offset /= 2;
         }
 
-        tree.setEdgeGroup(edgeGroup);
-        tree.setVertexGroup(vertexGroup);
-        tree.setVertexTextGroup(vertexTextGroup);
-//        System.out.println(tree);
-        frames.add(tree);
+        initTree.setEdgeGroup(edgeGroup);
+        initTree.setVertexGroup(vertexGroup);
+        initTree.setVertexTextGroup(vertexTextGroup);
+//        System.out.println(initTree);
+        frames.add(initTree);
         treeFrame.setFrames(frames);
         return treeFrame;
     }
@@ -150,8 +154,59 @@ public class BSTService {
         edgeGroup.add(edge);
     }
 
+    private boolean search(Node node, int data, List<Tree> frames) {
+
+        if (node == null) {
+            return false;
+        } else if (node.data == data) {
+            Tree tree = new Tree(frames.get(frames.size() - 1));
+            int circleId = Integer.parseInt(node.circle.getId().substring(1));
+            tree.getVertexGroup().get(circleId - 1).setFill(Color.YELLOW);
+            tree.getVertexTextGroup().get(circleId - 1).setStroke(Color.RED);
+            frames.add(tree);
+            return true;
+        } else if (node.data > data) {
+            // 复制一整颗树
+            Tree tree = new Tree(frames.get(frames.size() - 1));
+            int circleId = Integer.parseInt(node.circle.getId().substring(1));
+            tree.getVertexGroup().get(circleId - 1).setStroke(Color.YELLOW);
+            frames.add(tree);
+            if (node.left != null) {
+                tree = new Tree(frames.get(frames.size() - 1));
+                // 叶节点id - 1 = 此节点与父相连边id
+                int lineId = Integer.parseInt(node.left.circle.getId().substring(1)) - 1;
+                tree.getEdgeGroup().get(lineId - 1).setStroke(Color.YELLOW);
+                frames.add(tree);
+            }
+            return search(node.left, data, frames);
+        } else {
+            Tree tree = new Tree(frames.get(frames.size() - 1));
+            int circleId = Integer.parseInt(node.circle.getId().substring(1));
+            tree.getVertexGroup().get(circleId - 1).setStroke(Color.YELLOW);
+            frames.add(tree);
+            if (node.right != null) {
+                tree = new Tree(frames.get(frames.size() - 1));
+                // 叶节点id - 1 = 此节点与父相连边id
+                int lineId = Integer.parseInt(node.right.circle.getId().substring(1)) - 1;
+                tree.getEdgeGroup().get(lineId - 1).setStroke(Color.YELLOW);
+                frames.add(tree);
+            }
+            return search(node.right, data, frames);
+        }
+    }
+
+    public TreeFrame search(int data) {
+        TreeFrame treeFrame = new TreeFrame();
+        List<Tree> frames = new ArrayList<>();
+        frames.add(initTree);
+        search(this.root, data, frames);
+        System.out.println(frames);
+        treeFrame.setFrames(frames);
+        return treeFrame;
+    }
+
     /**
-     * d3: select(id) 属性变换过渡
+     * d3.select(有改变元素id) 属性变换过渡
      * @param node
      * @param changes
      */
@@ -302,32 +357,6 @@ public class BSTService {
     }
 
     /**
-     * Recursively print Inorder traversal of BST.
-     *
-     * @param node the root node
-     */
-
-
-    /**
-     * Serach recursively if the given value is present in BST or not.
-     *
-     * @param node the current node to check
-     * @param data the value to be checked
-     * @return boolean if data is present or not
-     */
-    private boolean search(Node node, int data) {
-        if (node == null) {
-            return false;
-        } else if (node.data == data) {
-            return true;
-        } else if (node.data > data) {
-            return search(node.left, data);
-        } else {
-            return search(node.right, data);
-        }
-    }
-
-    /**
      * add in BST. if the value is not already present it is inserted or else no change takes place.
      *
      * @param data the value to be inserted
@@ -367,7 +396,7 @@ public class BSTService {
      * @param data the data to be found for
      */
     public boolean find(int data) {
-        if (search(this.root, data)) {
+        if (search(this.root, data, null)) {
             System.out.println(data + " is present in given BST.");
             return true;
         }
