@@ -13,31 +13,34 @@ import java.util.Queue;
 public class BSTService {
 
     public static final int FullBTHei = 6;
-    /** only data member is root of BST */
     private Node root = null;
 
-    private class Node {
+    // TODO %d 不能作id, line's stroke don't work
+    String circleIdTemp = "C%d";
+    String lineIdTemp = "%sC%d";
+    String textIdTemp = "TC%d";
+    int ID = 1;     // node's id number
+
+    // private class Node extends Circle ?
+    private static class Node{
         int data;
+        Circle circle;
         Node left;
         Node right;
-
-        Circle circle;
 
         Node(int d) {
             data = d;
             left = null;
             right = null;
-            circle = null;
         }
     }
 
-
-    /** main function for tests */
     public static void main(String[] args) {
         Integer[] array = {84, 24, 57, 87, 13, 9, 56};
         BSTService tree = new BSTService();
-        tree.create(array);
-//        tree.inorder();
+        tree.create();
+
+        tree.inorder();
 
 //        List<Circle> circles = new ArrayList<>();
 //        Circle c1 = new Circle(1,2,3,4,5);
@@ -51,20 +54,20 @@ public class BSTService {
 
     }
 
-    public TreeFrame create(Integer[] array) {
+    public TreeFrame create() {
 
         //array = new Integer[]{84, 24, 57, 87, 13, 9, 56};
-        BSTService bst = new BSTService();
-        for (Integer integer : array) {
-            bst.add(integer);
-        }
+//        BSTService bst = new BSTService();
+//        for (Integer integer : array) {
+//            bst.add(integer);
+//        }
 
         TreeFrame treeFrame = new TreeFrame();
         List<Tree> frames = new ArrayList<>();
         Tree tree = new Tree();
-        List<Line> edgeGroup = new ArrayList<>(array.length-1);
-        List<Circle> vertexGroup = new ArrayList<>(array.length);
-        List<Text> vertexTextGroup = new ArrayList<>(array.length);
+        List<Line> edgeGroup = new ArrayList<>();
+        List<Circle> vertexGroup = new ArrayList<>();
+        List<Text> vertexTextGroup = new ArrayList<>();
 
         int r = 15;
         // 孩子节点与其父节点高度差
@@ -78,17 +81,17 @@ public class BSTService {
         
         // 层序遍历建初始帧
 
-        Circle node = new Circle(cx, cy, r, fill, stroke);
-        Text data = new Text(cx, cy, String.valueOf(bst.root.data));
-        Line edge;
+        Circle node = new Circle(cx, cy, r, fill, stroke, String.format(circleIdTemp, ID));
+        Text data = new Text(cx, cy, stroke, String.valueOf(root.data), String.format(textIdTemp, ID));
+        ID++;
         // 让node携带更多信息
-        bst.root.circle = node;
+        root.circle = node;
 
         vertexGroup.add(node);
         vertexTextGroup.add(data);
 
         Queue<Node> queue = new LinkedList<>();
-        queue.add(bst.root);
+        queue.add(root);
         int level = 0;
         int count = 1;  // 每层入队总数
         while (!queue.isEmpty()) {
@@ -132,9 +135,12 @@ public class BSTService {
         Circle node;
         Text data;
         Line edge;
-        node = new Circle(cx, cy, r, fill, stroke);
-        data = new Text(cx, cy, String.valueOf(L ? parent.left.data : parent.right.data));
-        edge = new Line(parent.circle.getCx(), parent.circle.getCy(), cx, cy, stroke);
+        node = new Circle(cx, cy, r, fill, stroke, String.format(circleIdTemp, ID));
+        data = new Text(cx, cy, stroke, String.valueOf(L ? parent.left.data : parent.right.data),
+                String.format(textIdTemp, ID));
+        edge = new Line(parent.circle.getCx(), parent.circle.getCy(), cx, cy, stroke,
+                String.format(lineIdTemp, parent.circle.getId(), ID));
+        ID++;
         if (L)
             parent.left.circle = node;
         else
@@ -144,34 +150,62 @@ public class BSTService {
         edgeGroup.add(edge);
     }
 
-    /*
-    不易确定当前v、e在group数组里的位置,d3不能select属性有变的某个元素
+    /**
+     * d3: select(id) 属性变换过渡
+     * @param node
+     * @param changes
      */
-    private void inOrder(Node node, List<Tree> frames) {
+    private void inOrder(Node node, List<GraphChange> changes) {
         if (node == null) {
             return;
         }
-        Tree tree = frames.get(frames.size() - 1);
-//        List<Line> edgeGroup = new ArrayList<>(array.length-1);
-//        List<Circle> vertexGroup = new ArrayList<>(array.length);
-//        List<Text> vertexTextGroup = new ArrayList<>(array.length);
+        // 当前遍历到visitC节点
+        Circle visitC = node.circle;
+        visitC.setStroke(Color.YELLOW);
+        visitC.setFill(Color.WHITE);
+
+        // node与circle绑定,易找原circle,text与circle在group里的index(记录在id)相同,从而找原text
+//        int idx = Integer.parseInt(visitC.getId()) - 1;  // id从1始
+//        Text visitT = vertexTextGroup.get(idx);
+//        visitT.setStroke(Color.YELLOW);
+
+        String textId = "T" + node.circle.getId();
+        Text visitT = new Text(0, 0, Color.YELLOW, "", textId);
+        changes.add(new GraphChange(visitC, visitT, null));
+//        System.out.println(changes);
         if (node.left != null) {
-            inOrder(node.left, frames);
+            // 当前遍历到visitL边
+            // 通过相同id直接新建line,为需改变的属性(stroke)赋值
+            String lindId = node.circle.getId() +  node.left.circle.getId();
+            Line visitL = new Line(0, 0, 0, 0, Color.YELLOW, lindId);
+            changes.add(new GraphChange(null, null, visitL));
+
+            inOrder(node.left, changes);
         }
 
-        System.out.print(node.data + " ");
+        // 访问此节点
+        // 必须new新circle, visitedC = node.circle 后 visitedC.setXX 会覆盖之前加入changes的visitC(两者都指向node.circle)
+        Circle visitedC = new Circle(0, 0, 0, Color.YELLOW, 0, node.circle.getId());
+        textId = "T" + node.circle.getId();
+        Text visitedT = new Text(0, 0, Color.RED, "", textId);
+        changes.add(new GraphChange(visitedC, visitedT, null));
+
         if (node.right != null) {
-            inOrder(node.right, frames);
+            String lindId = node.circle.getId() +  node.right.circle.getId();
+            Line line = new Line(0, 0, 0, 0, Color.YELLOW, lindId);
+            changes.add(new GraphChange(null, null, line));
+
+            inOrder(node.right, changes);
         }
     }
 
-    public TreeFrame inorder(Tree initTree) {
-        TreeFrame treeFrame = new TreeFrame();
-        List<Tree> frames = new ArrayList<>();
-        frames.add(initTree);
-        inOrder(this.root, frames);
-        treeFrame.setFrames(frames);
-        return treeFrame;
+    public GraphChanges inorder() {
+        GraphChanges graphChanges = new GraphChanges();
+        List<GraphChange> changes = new ArrayList<>();
+        inOrder(this.root, changes);
+        graphChanges.setChanges(changes);
+//        System.out.println(changes);
+        return graphChanges;
     }
 
 

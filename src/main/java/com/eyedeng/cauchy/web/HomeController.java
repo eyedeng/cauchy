@@ -10,7 +10,7 @@ public class HomeController {
     private static final String template = "Hello, %s!";
     private final AtomicLong counter = new AtomicLong();
 
-    @GetMapping("/")
+    @GetMapping("/hello")
     public String home() {
         return "hello";
     }
