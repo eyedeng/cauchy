@@ -16,12 +16,13 @@ svg.attr('width', Width)
 let frames;
 let tree;
 let idx = 0;
-// 操作状态:create/inorder/search
+// 操作状态
 let state;
 const States = {
     create: 1,
     inorder: 2,
-    search: 3
+    search: 3,
+    preOrder: 4
 };
 document.querySelector("#create").onclick = () => {
     // console.log('按');
@@ -51,16 +52,19 @@ document.querySelector("#create").onclick = () => {
         }
     });
 };
-let changes;
+// let changes;
 document.querySelector("#inorder").onclick = () => {
 
     $.ajax({
         type : "GET",
         url : "api/btree/inOrder",
         success : function(response) {
-            changes = response.changes;
+            // changes = response.changes;
+            // inOrderDraw();
+            frames = response.frames;
+            idx = 0;
             state = States.inorder;
-            inOrderDraw();
+            drawFrames();
         },
         error : function(e) {
             alert("Error!");
@@ -88,6 +92,24 @@ document.querySelector("#search").onclick = () => {
         }
     });
 };
+document.querySelector("#preorder").onclick = () => {
+
+    $.ajax({
+        type : "GET",
+        url : "api/btree/preOrder",
+        success : function(response) {
+            frames = response.frames;
+            // console.log(frames);
+            idx = 0;
+            state = States.preOrder;
+            drawFrames();
+        },
+        error : function(e) {
+            alert("Error!");
+            console.log("ERROR: ", e);
+        }
+    });
+};
 
 let durationT = 1000;
 let timeout = 1000;
@@ -100,14 +122,9 @@ document.querySelector('#pause').onclick = () => {
 document.querySelector('#play').onclick = () => {
     if (isPause) {
         isPause = false;
-        if (state === States.inorder) {
-            inOrderDraw();
-        }else if (state === States.search) {
-            drawFrames();
-        }
+        drawFrames();
     }
 };
-// TODO 不能恢复此帧属性,后退一帧.还是需要整颗树的数据？
 document.querySelector('#preFrame').onclick = () => {
     // pause时
     if (isPause) {
@@ -119,16 +136,13 @@ document.querySelector('#nextFrame').onclick = () => {
     // pause时
     if (isPause) {
         idx = idx + 1;
-        if (state === States.inorder) {
-            drawByIdx();
-        }else if (state === States.search) {
-            drawOneFrame();
-        }
+        drawOneFrame();
     }
 };
 document.querySelector('#clearing').onclick = () => {
     if (idx !== 0) {
         idx = 0;
+        state = States.create;
         drawOneFrame();
     }
 };
@@ -167,49 +181,49 @@ function creatDraw() {
         .attr('id', d => d.id);
 }
 
-function drawByIdx() {
-    console.log(idx);
-    let circle = changes[idx].circle;
-    let line = changes[idx].line;
-    let text = changes[idx].text;
-    if (circle != null) {
-        d3.select(`#${circle.id}`)
-            .transition()
-            .duration(durationT)
-            .attr('stroke', Color[circle.stroke])
-            .attr('fill', Color[circle.fill]);
-    }
-    if (text != null) {
-        d3.select(`#${text.id}`)
-            .transition()
-            .duration(durationT)
-            .attr('stroke', Color[text.stroke]);
-    }
-    if (line != null) {
-        d3.select(`#${line.id}`)
-            .transition()
-            .duration(durationT)
-            .attr('stroke', Color[line.stroke])
-            .attr('stroke-width', 3);
-    }
-}
+// function drawByIdx() {
+//     console.log(idx);
+//     let circle = changes[idx].circle;
+//     let line = changes[idx].line;
+//     let text = changes[idx].text;
+//     if (circle != null) {
+//         d3.select(`#${circle.id}`)
+//             .transition()
+//             .duration(durationT)
+//             .attr('stroke', Color[circle.stroke])
+//             .attr('fill', Color[circle.fill]);
+//     }
+//     if (text != null) {
+//         d3.select(`#${text.id}`)
+//             .transition()
+//             .duration(durationT)
+//             .attr('stroke', Color[text.stroke]);
+//     }
+//     if (line != null) {
+//         d3.select(`#${line.id}`)
+//             .transition()
+//             .duration(durationT)
+//             .attr('stroke', Color[line.stroke])
+//             .attr('stroke-width', 3);
+//     }
+// }
 
-function inOrderDraw() {
-
-    let intervalID = setInterval(() => {
-        if (idx >= changes.length || isPause) {
-            console.log('clear', idx);
-            // 当前帧为idx-1
-            if (isPause) {
-                idx = idx - 1;
-            }
-            clearInterval(intervalID);
-        } else {
-            drawByIdx();
-            idx = idx + 1;
-        }
-    }, timeout);
-}
+// function inOrderDraw() {
+//
+//     let intervalID = setInterval(() => {
+//         if (idx >= changes.length || isPause) {
+//             console.log('clear', idx);
+//             // 当前帧为idx-1
+//             if (isPause) {
+//                 idx = idx - 1;
+//             }
+//             clearInterval(intervalID);
+//         } else {
+//             drawByIdx();
+//             idx = idx + 1;
+//         }
+//     }, timeout);
+// }
 
 function drawFrames() {
     let intervalID = setInterval(() => {
@@ -246,13 +260,15 @@ function drawOneFrame() {
         .attr('x2', d => d.x2 )
         .attr('y2', d => d.y2 )
         .attr('stroke', d => Color[d.stroke] )
-        .attr('stroke-width', 1);
+        .attr('stroke-width', () => state > 1? 2: 1);
     vertexTextGroup.selectAll('text').data(tree.vertexTextGroup)
         .transition()
         .duration(durationT)
         .attr('x', d => d.x - 5)
         .attr('y', d => d.y + 5)
         .attr('stroke', d => Color[d.stroke])
+        .attr('font-weight', 'bold')
+        .attr('font-size', 20)
         .text(d => d.text);
 
 }

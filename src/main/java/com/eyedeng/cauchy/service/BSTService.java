@@ -161,7 +161,7 @@ public class BSTService {
         } else if (node.data == data) {
             Tree tree = new Tree(frames.get(frames.size() - 1));
             int circleId = Integer.parseInt(node.circle.getId().substring(1));
-            tree.getVertexGroup().get(circleId - 1).setFill(Color.YELLOW);
+            tree.getVertexGroup().get(circleId - 1).setFill(Color.ORANGE);
             tree.getVertexTextGroup().get(circleId - 1).setStroke(Color.RED);
             frames.add(tree);
             return true;
@@ -169,26 +169,26 @@ public class BSTService {
             // 复制一整颗树
             Tree tree = new Tree(frames.get(frames.size() - 1));
             int circleId = Integer.parseInt(node.circle.getId().substring(1));
-            tree.getVertexGroup().get(circleId - 1).setStroke(Color.YELLOW);
+            tree.getVertexGroup().get(circleId - 1).setStroke(Color.ORANGE);
             frames.add(tree);
             if (node.left != null) {
                 tree = new Tree(frames.get(frames.size() - 1));
                 // 叶节点id - 1 = 此节点与父相连边id
                 int lineId = Integer.parseInt(node.left.circle.getId().substring(1)) - 1;
-                tree.getEdgeGroup().get(lineId - 1).setStroke(Color.YELLOW);
+                tree.getEdgeGroup().get(lineId - 1).setStroke(Color.ORANGE);
                 frames.add(tree);
             }
             return search(node.left, data, frames);
         } else {
             Tree tree = new Tree(frames.get(frames.size() - 1));
             int circleId = Integer.parseInt(node.circle.getId().substring(1));
-            tree.getVertexGroup().get(circleId - 1).setStroke(Color.YELLOW);
+            tree.getVertexGroup().get(circleId - 1).setStroke(Color.ORANGE);
             frames.add(tree);
             if (node.right != null) {
                 tree = new Tree(frames.get(frames.size() - 1));
                 // 叶节点id - 1 = 此节点与父相连边id
                 int lineId = Integer.parseInt(node.right.circle.getId().substring(1)) - 1;
-                tree.getEdgeGroup().get(lineId - 1).setStroke(Color.YELLOW);
+                tree.getEdgeGroup().get(lineId - 1).setStroke(Color.ORANGE);
                 frames.add(tree);
             }
             return search(node.right, data, frames);
@@ -205,62 +205,152 @@ public class BSTService {
         return treeFrame;
     }
 
-    /**
-     * d3.select(有改变元素id) 属性变换过渡
-     * @param node
-     * @param changes
-     */
-    private void inOrder(Node node, List<GraphChange> changes) {
+    // d3.select(有改变元素id) 属性变换过渡
+//    private void inOrder(Node node, List<GraphChange> changes) {
+//        if (node == null) {
+//            return;
+//        }
+//        // 当前遍历到visitC节点
+//        Circle visitC = node.circle;
+//        visitC.setStroke(Color.YELLOW);
+//        visitC.setFill(Color.WHITE);
+//
+//        // node与circle绑定,易找原circle,text与circle在group里的index(记录在id)相同,从而找原text
+////        int idx = Integer.parseInt(visitC.getId()) - 1;  // id从1始
+////        Text visitT = vertexTextGroup.get(idx);
+////        visitT.setStroke(Color.YELLOW);
+//
+//        String textId = "T" + node.circle.getId();
+//        Text visitT = new Text(0, 0, Color.YELLOW, "", textId);
+//        changes.add(new GraphChange(visitC, visitT, null));
+////        System.out.println(changes);
+//        if (node.left != null) {
+//            // 当前遍历到visitL边
+//            // 通过相同id直接新建line,为需改变的属性(stroke)赋值
+//            String lindId = node.circle.getId() +  node.left.circle.getId();
+//            Line visitL = new Line(0, 0, 0, 0, Color.YELLOW, lindId);
+//            changes.add(new GraphChange(null, null, visitL));
+//
+//            inOrder(node.left, changes);
+//        }
+//
+//        // 访问此节点
+//        // 必须new新circle, visitedC = node.circle 后 visitedC.setXX 会覆盖之前加入changes的visitC(两者都指向node.circle)
+//        Circle visitedC = new Circle(0, 0, 0, Color.YELLOW, 0, node.circle.getId());
+//        textId = "T" + node.circle.getId();
+//        Text visitedT = new Text(0, 0, Color.RED, "", textId);
+//        changes.add(new GraphChange(visitedC, visitedT, null));
+//
+//        if (node.right != null) {
+//            String lindId = node.circle.getId() +  node.right.circle.getId();
+//            Line line = new Line(0, 0, 0, 0, Color.YELLOW, lindId);
+//            changes.add(new GraphChange(null, null, line));
+//
+//            inOrder(node.right, changes);
+//        }
+//    }
+
+//    public GraphChanges inorder() {
+//        GraphChanges graphChanges = new GraphChanges();
+//        List<GraphChange> changes = new ArrayList<>();
+//        inOrder(this.root, changes);
+//        graphChanges.setChanges(changes);
+////        System.out.println(changes);
+//        return graphChanges;
+//    }
+
+    private void inOrder(Node node, List<Tree> frames) {
         if (node == null) {
             return;
         }
-        // 当前遍历到visitC节点
-        Circle visitC = node.circle;
-        visitC.setStroke(Color.YELLOW);
-        visitC.setFill(Color.WHITE);
+        // 经过
+        Tree tree = new Tree(frames.get(frames.size() - 1));
+        int circleId = Integer.parseInt(node.circle.getId().substring(1));
+        tree.getVertexGroup().get(circleId - 1).setStroke(Color.ORANGE);
+        tree.getVertexGroup().get(circleId - 1).setFill(Color.WHITE);
+        tree.getVertexTextGroup().get(circleId - 1).setStroke(Color.ORANGE);
+        frames.add(tree);
 
-        // node与circle绑定,易找原circle,text与circle在group里的index(记录在id)相同,从而找原text
-//        int idx = Integer.parseInt(visitC.getId()) - 1;  // id从1始
-//        Text visitT = vertexTextGroup.get(idx);
-//        visitT.setStroke(Color.YELLOW);
-
-        String textId = "T" + node.circle.getId();
-        Text visitT = new Text(0, 0, Color.YELLOW, "", textId);
-        changes.add(new GraphChange(visitC, visitT, null));
-//        System.out.println(changes);
         if (node.left != null) {
-            // 当前遍历到visitL边
-            // 通过相同id直接新建line,为需改变的属性(stroke)赋值
-            String lindId = node.circle.getId() +  node.left.circle.getId();
-            Line visitL = new Line(0, 0, 0, 0, Color.YELLOW, lindId);
-            changes.add(new GraphChange(null, null, visitL));
+            tree = new Tree(frames.get(frames.size() - 1));
+            int lineId = Integer.parseInt(node.left.circle.getId().substring(1)) - 1;
+            tree.getEdgeGroup().get(lineId - 1).setStroke(Color.ORANGE);
+            frames.add(tree);
 
-            inOrder(node.left, changes);
+            inOrder(node.left, frames);
         }
 
-        // 访问此节点
-        // 必须new新circle, visitedC = node.circle 后 visitedC.setXX 会覆盖之前加入changes的visitC(两者都指向node.circle)
-        Circle visitedC = new Circle(0, 0, 0, Color.YELLOW, 0, node.circle.getId());
-        textId = "T" + node.circle.getId();
-        Text visitedT = new Text(0, 0, Color.RED, "", textId);
-        changes.add(new GraphChange(visitedC, visitedT, null));
+        // 访问
+        tree = new Tree(frames.get(frames.size() - 1));
+        circleId = Integer.parseInt(node.circle.getId().substring(1));
+        tree.getVertexGroup().get(circleId - 1).setFill(Color.ORANGE);
+        tree.getVertexTextGroup().get(circleId - 1).setStroke(Color.WHITE);
+        frames.add(tree);
 
         if (node.right != null) {
-            String lindId = node.circle.getId() +  node.right.circle.getId();
-            Line line = new Line(0, 0, 0, 0, Color.YELLOW, lindId);
-            changes.add(new GraphChange(null, null, line));
+            tree = new Tree(frames.get(frames.size() - 1));
+            int lineId = Integer.parseInt(node.right.circle.getId().substring(1)) - 1;
+            tree.getEdgeGroup().get(lineId - 1).setStroke(Color.ORANGE);
+            frames.add(tree);
 
-            inOrder(node.right, changes);
+            inOrder(node.right, frames);
         }
     }
 
-    public GraphChanges inorder() {
-        GraphChanges graphChanges = new GraphChanges();
-        List<GraphChange> changes = new ArrayList<>();
-        inOrder(this.root, changes);
-        graphChanges.setChanges(changes);
-//        System.out.println(changes);
-        return graphChanges;
+    public TreeFrame inorder() {
+        TreeFrame treeFrame = new TreeFrame();
+        List<Tree> frames = new ArrayList<>();
+        frames.add(initTree);
+        inOrder(this.root, frames);
+        System.out.println(frames);
+        treeFrame.setFrames(frames);
+        return treeFrame;
+    }
+
+    private void preOrder(Node node, List<Tree> frames) {
+        if (node == null) {
+            return;
+        }
+        Tree tree = new Tree(frames.get(frames.size() - 1));
+        int circleId = Integer.parseInt(node.circle.getId().substring(1));
+        tree.getVertexGroup().get(circleId - 1).setFill(Color.ORANGE);
+        tree.getVertexTextGroup().get(circleId - 1).setStroke(Color.RED);
+        frames.add(tree);
+
+        if (node.left != null) {
+            tree = new Tree(frames.get(frames.size() - 1));
+            // 叶节点id - 1 = 此节点与父相连边id
+            int lineId = Integer.parseInt(node.left.circle.getId().substring(1)) - 1;
+            tree.getEdgeGroup().get(lineId - 1).setStroke(Color.ORANGE);
+            frames.add(tree);
+
+            preOrder(node.left, frames);
+        }
+        if (node.right != null) {
+            tree = new Tree(frames.get(frames.size() - 1));
+            // 叶节点id - 1 = 此节点与父相连边id
+            int lineId = Integer.parseInt(node.right.circle.getId().substring(1)) - 1;
+            tree.getEdgeGroup().get(lineId - 1).setStroke(Color.ORANGE);
+            frames.add(tree);
+
+            preOrder(node.right, frames);
+        }
+        tree = new Tree(frames.get(frames.size() - 1));
+        circleId = Integer.parseInt(node.circle.getId().substring(1));
+        tree.getVertexGroup().get(circleId - 1).setStroke(Color.GREEN);
+        tree.getVertexTextGroup().get(circleId - 1).setStroke(Color.WHITE);
+        frames.add(tree);
+
+    }
+
+    public TreeFrame preorder() {
+        TreeFrame treeFrame = new TreeFrame();
+        List<Tree> frames = new ArrayList<>();
+        frames.add(initTree);
+        preOrder(this.root, frames);
+        System.out.println(frames);
+        treeFrame.setFrames(frames);
+        return treeFrame;
     }
 
 
@@ -321,24 +411,6 @@ public class BSTService {
     }
 
     /**
-     * Recursively print Preorder traversal of the BST
-     *
-     * @param node the root node
-     */
-    private void preOrder(Node node) {
-        if (node == null) {
-            return;
-        }
-        System.out.print(node.data + " ");
-        if (node.left != null) {
-            preOrder(node.left);
-        }
-        if (node.right != null) {
-            preOrder(node.right);
-        }
-    }
-
-    /**
      * Recursively print Postorder travesal of BST.
      *
      * @param node the root node
@@ -380,13 +452,6 @@ public class BSTService {
     public void postorder() {
         System.out.println("Postorder traversal of this tree is:");
         postOrder(this.root);
-        System.out.println(); // for next li
-    }
-
-    /** To call preorder traversal on tree. */
-    public void preorder() {
-        System.out.println("Preorder traversal of this tree is:");
-        preOrder(this.root);
         System.out.println(); // for next li
     }
 

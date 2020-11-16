@@ -1,6 +1,5 @@
 package com.eyedeng.cauchy.web;
 
-import com.eyedeng.cauchy.domain.GraphChanges;
 import com.eyedeng.cauchy.domain.TreeFrame;
 import com.eyedeng.cauchy.dto.Array;
 import com.eyedeng.cauchy.service.BSTService;
@@ -30,12 +29,17 @@ public class TreeController {
     }
 
     @GetMapping("inOrder")
-    public GraphChanges inOrder() {
+    public TreeFrame inOrder() {
         return bstService.inorder();
     }
 
     @GetMapping("search")
     public TreeFrame search(@PathParam(value = "num") int num) {
         return bstService.search(num);
+    }
+
+    @GetMapping("preOrder")
+    public TreeFrame search() {
+        return bstService.preorder();
     }
 }
