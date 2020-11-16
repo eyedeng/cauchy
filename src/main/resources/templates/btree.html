@@ -6,16 +6,20 @@
     <title>Document</title>
     <script src="/js/3rdPart/d3.js"></script>
     <script src="/js/3rdPart/jquery-3.5.0.min.js"></script>
-
+    <style>
+        div{
+            margin-bottom: 5px;
+        }
+    </style>
 </head>
 <body>
     <h3>Binary Seach Tree</h3>
-    <div id="">
+    <div id="set">
         <input id="input" type="text" value="84, 24, 57, 87, 13, 9, 56" size="30">
         <button id="create">创建二叉排序树</button>
         <button id="inorder">中序遍历</button>
         <button id="preorder">前序遍历</button>
-        <button id="search">查找</button>
+        <button id="search">查找n=</button>
         <input id="num" type="number" size="1">
     </div>
     <div id="control">
@@ -24,6 +28,10 @@
         <button id="play"> 继续 </button>
         <button id="nextFrame"> -> </button>
         <button id="clearing"> 复原 </button>
+        <label id="">速度：×</label>
+        <button id="speed2">0.5</button>
+        <button id="speed3">1</button>
+        <button id="speed4">2</button>
     </div>
     <svg></svg>
     

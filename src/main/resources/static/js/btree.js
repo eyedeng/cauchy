@@ -110,8 +110,9 @@ document.querySelector("#preorder").onclick = () => {
         }
     });
 };
-
+// timeout = durationT
 let durationT = 1000;
+let rate = 1;
 let timeout = 1000;
 let isPause = false;
 document.querySelector('#pause').onclick = () => {
@@ -126,15 +127,15 @@ document.querySelector('#play').onclick = () => {
     }
 };
 document.querySelector('#preFrame').onclick = () => {
-    // pause时
-    if (isPause) {
-        idx = idx - 1;
+    // pause时 且不为0
+    if (isPause && idx > 0) {
+        idx =  idx - 1;
         drawOneFrame();
     }
 };
 document.querySelector('#nextFrame').onclick = () => {
     // pause时
-    if (isPause) {
+    if (isPause && idx < frames.length-1) {
         idx = idx + 1;
         drawOneFrame();
     }
@@ -142,10 +143,16 @@ document.querySelector('#nextFrame').onclick = () => {
 document.querySelector('#clearing').onclick = () => {
     if (idx !== 0) {
         idx = 0;
+        // 清除此函数
+        clearInterval(intervalID);
         state = States.create;
         drawOneFrame();
     }
 };
+
+document.querySelector('#speed2').onclick = () => {rate = 1.5; durationT = rate * durationT; timeout = durationT};
+document.querySelector('#speed3').onclick = () => {rate = 1;  durationT = rate * durationT; timeout = durationT};
+document.querySelector('#speed4').onclick = () => {rate = 0.5;  durationT = rate * durationT; timeout = durationT};
 
 let vertexGroup ;
 let edgeGroup;
@@ -157,8 +164,12 @@ function creatDraw() {
     vertexGroup = svg.append('g').attr('id', 'v');
     edgeGroup = svg.append('g').attr('id', 'e');
     vertexTextGroup = svg.append('g').attr('id', 't');
+    let delayT = 800;
     // const r = 15;
     vertexGroup.selectAll('circle').data(tree.vertexGroup).enter().append('circle')
+        .transition()
+        .duration(durationT * 0.6)
+        .delay((d,i) => delayT * i * rate)
         .attr('cx', d => d.cx )
         .attr('cy', d => d.cy )
         .attr('r', d => d.r )
@@ -166,6 +177,9 @@ function creatDraw() {
         .attr('stroke', d => Color[d.stroke] )
         .attr('id', d => d.id);
     edgeGroup.selectAll('line').data(tree.edgeGroup).enter().append('line')
+        .transition()
+        .duration(durationT * 0.6)
+        .delay((d,i) => delayT * i * rate)
         .attr('x1', d => d.x1 )
         .attr('y1', d => d.y1 )
         .attr('x2', d => d.x2 )
@@ -174,6 +188,9 @@ function creatDraw() {
         .attr('stroke-width', 1)
         .attr('id', d => d.id);
     vertexTextGroup.selectAll('text').data(tree.vertexTextGroup).enter().append('text')
+        .transition()
+        .duration(durationT * 0.6)
+        .delay((d,i) => delayT * i * rate)
         .attr('x', d => d.x - 5)
         .attr('y', d => d.y + 5)
         .attr('stroke', d => Color[d.stroke])
@@ -225,12 +242,13 @@ function creatDraw() {
 //     }, timeout);
 // }
 
+let intervalID;
 function drawFrames() {
-    let intervalID = setInterval(() => {
+    intervalID = setInterval(() => {
         if (idx >= frames.length || isPause) {
             console.log('clear', idx);
-            // 当前帧为idx-1
-            if (isPause) {
+            // 当前帧为idx-1 注意溢出
+            if (isPause && idx > 0) {
                 idx = idx - 1;
             }
             clearInterval(intervalID);

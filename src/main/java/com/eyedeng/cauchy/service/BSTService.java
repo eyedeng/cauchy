@@ -40,11 +40,11 @@ public class BSTService {
     }
 
     public static void main(String[] args) {
-        Integer[] array = {84, 24, 57, 87, 13, 9, 56};
-        BSTService tree = new BSTService();
-        tree.create();
-
-        tree.inorder();
+//        Integer[] array = {84, 24, 57, 87, 13, 9, 56};
+//        BSTService tree = new BSTService();
+//        tree.create();
+//
+//        tree.inorder();
 
 //        List<Circle> circles = new ArrayList<>();
 //        Circle c1 = new Circle(1,2,3,4,5);
@@ -155,7 +155,7 @@ public class BSTService {
     }
 
     private boolean search(Node node, int data, List<Tree> frames) {
-
+        String temp = "n=%d %c %s,%s";
         if (node == null) {
             return false;
         } else if (node.data == data) {
@@ -163,6 +163,7 @@ public class BSTService {
             int circleId = Integer.parseInt(node.circle.getId().substring(1));
             tree.getVertexGroup().get(circleId - 1).setFill(Color.ORANGE);
             tree.getVertexTextGroup().get(circleId - 1).setStroke(Color.RED);
+            tree.getVertexTextGroup().get(circleId - 1).setText(data + "找到了");
             frames.add(tree);
             return true;
         } else if (node.data > data) {
@@ -170,6 +171,8 @@ public class BSTService {
             Tree tree = new Tree(frames.get(frames.size() - 1));
             int circleId = Integer.parseInt(node.circle.getId().substring(1));
             tree.getVertexGroup().get(circleId - 1).setStroke(Color.ORANGE);
+            tree.getVertexTextGroup().get(circleId - 1).setText(String.format(temp, data, '<',
+                    tree.getVertexTextGroup().get(circleId - 1).getText(), "找左孩子"));
             frames.add(tree);
             if (node.left != null) {
                 tree = new Tree(frames.get(frames.size() - 1));
@@ -183,6 +186,8 @@ public class BSTService {
             Tree tree = new Tree(frames.get(frames.size() - 1));
             int circleId = Integer.parseInt(node.circle.getId().substring(1));
             tree.getVertexGroup().get(circleId - 1).setStroke(Color.ORANGE);
+            tree.getVertexTextGroup().get(circleId - 1).setText(String.format(temp, data, '>',
+                    tree.getVertexTextGroup().get(circleId - 1).getText(), "找右孩子"));
             frames.add(tree);
             if (node.right != null) {
                 tree = new Tree(frames.get(frames.size() - 1));
@@ -199,7 +204,9 @@ public class BSTService {
         TreeFrame treeFrame = new TreeFrame();
         List<Tree> frames = new ArrayList<>();
         frames.add(initTree);
-        search(this.root, data, frames);
+        if (!search(this.root, data, frames)) {
+            System.out.println("not found " + data);
+        }
         System.out.println(frames);
         treeFrame.setFrames(frames);
         return treeFrame;
@@ -337,8 +344,11 @@ public class BSTService {
         }
         tree = new Tree(frames.get(frames.size() - 1));
         circleId = Integer.parseInt(node.circle.getId().substring(1));
-        tree.getVertexGroup().get(circleId - 1).setStroke(Color.GREEN);
-        tree.getVertexTextGroup().get(circleId - 1).setStroke(Color.WHITE);
+//        tree.getVertexGroup().get(circleId - 1).setStroke(Color.BLUE);
+        tree.getVertexTextGroup().get(circleId - 1).setStroke(Color.BLACK);
+        tree.getVertexTextGroup().get(circleId - 1).setText(
+                tree.getVertexTextGroup().get(circleId - 1).getText() + " 回溯"
+        );
         frames.add(tree);
 
     }
@@ -353,14 +363,6 @@ public class BSTService {
         return treeFrame;
     }
 
-
-    /**
-     * Recursive method to delete a data if present in BST.
-     *
-     * @param node the current node to search for data
-     * @param data the value to be deleted
-     * @return Node the updated value of root parameter after delete operation
-     */
     private Node delete(Node node, int data) {
         if (node == null) {
             System.out.println("No such data present in BST.");
@@ -392,13 +394,7 @@ public class BSTService {
         return node;
     }
 
-    /**
-     * Recursive insertion of value in BST.
-     *
-     * @param node to check if the data can be inserted in current node or its subtree
-     * @param data the value to be inserted
-     * @return the modified value of the root parameter after insertion
-     */
+
     private Node insert(Node node, int data) {
         if (node == null) {
             node = new Node(data);
@@ -410,11 +406,6 @@ public class BSTService {
         return node;
     }
 
-    /**
-     * Recursively print Postorder travesal of BST.
-     *
-     * @param node the root node
-     */
     private void postOrder(Node node) {
         if (node == null) {
             return;
@@ -428,38 +419,20 @@ public class BSTService {
         System.out.print(node.data + " ");
     }
 
-    /**
-     * add in BST. if the value is not already present it is inserted or else no change takes place.
-     *
-     * @param data the value to be inserted
-     */
     public void add(int data) {
         this.root = insert(this.root, data);
     }
 
-    /**
-     * If data is present in BST delete it else do nothing.
-     *
-     * @param data the value to be removed
-     */
     public void remove(int data) {
         this.root = delete(this.root, data);
     }
 
-
-
-    /** To call postorder traversal on tree */
     public void postorder() {
         System.out.println("Postorder traversal of this tree is:");
         postOrder(this.root);
         System.out.println(); // for next li
     }
 
-    /**
-     * To check if given value is present in tree or not.
-     *
-     * @param data the data to be found for
-     */
     public boolean find(int data) {
         if (search(this.root, data, null)) {
             System.out.println(data + " is present in given BST.");
