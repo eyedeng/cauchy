@@ -25,6 +25,11 @@ public class ViewController {
         return "btree";
     }
 
+    @GetMapping("/sort")
+    public String sort() {
+        return "sort";
+    }
+
     @GetMapping("/greet")
     public String greet() {
         return "greeting";

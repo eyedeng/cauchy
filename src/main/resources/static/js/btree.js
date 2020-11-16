@@ -1,18 +1,6 @@
-const Color = {
-    1: 'red',
-    2: 'orange',
-    3: 'yellow',
-    4: 'green',
-    5: 'blue',
-    6: 'black',
-    7: 'white'
-};
-const Width = 1000;
-const Height = 570;
 const svg = d3.select('svg');
 svg.attr('width', Width)
     .attr('height', Height);
-
 let frames;
 let tree;
 let idx = 0;
