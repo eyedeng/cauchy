@@ -14,6 +14,7 @@ const States = {
 };
 document.querySelector("#create").onclick = () => {
     // console.log('按');
+    clearInterval(intervalID);
     let input = document.querySelector("#input").value;
     input = input.split(",").map(i => parseInt(i));
 
@@ -42,7 +43,7 @@ document.querySelector("#create").onclick = () => {
 };
 // let changes;
 document.querySelector("#inorder").onclick = () => {
-
+    clearInterval(intervalID);
     $.ajax({
         type : "GET",
         url : "api/btree/inOrder",
@@ -61,6 +62,7 @@ document.querySelector("#inorder").onclick = () => {
     });
 };
 document.querySelector("#search").onclick = () => {
+    clearInterval(intervalID);
     let num = document.querySelector("#num").value;
     num = parseInt(num);
     $.ajax({
@@ -81,7 +83,7 @@ document.querySelector("#search").onclick = () => {
     });
 };
 document.querySelector("#preorder").onclick = () => {
-
+    clearInterval(intervalID);
     $.ajax({
         type : "GET",
         url : "api/btree/preOrder",

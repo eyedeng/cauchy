@@ -13,7 +13,7 @@ public class ViewController {
     public String index(Model model) {
         model.addAttribute("mes", "欢迎来到cauchy");
         List<String> kinds = new ArrayList<>();
-        kinds.add("冒泡");
+        kinds.add("选择");
         kinds.add("BSTree");
         kinds.add("动态规划");
         model.addAttribute("kinds", kinds);
