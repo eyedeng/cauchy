@@ -9,13 +9,13 @@ import java.util.List;
 
 @Controller
 public class ViewController {
-    @GetMapping("/index")
+    @GetMapping("/")
     public String index(Model model) {
-        model.addAttribute("mes", "欢迎来到cauchy");
+        model.addAttribute("mes", "欢迎来到cauchy，本地访问地址：");
         List<String> kinds = new ArrayList<>();
-        kinds.add("选择");
-        kinds.add("BSTree");
-        kinds.add("动态规划");
+        kinds.add("localhost:8080/sort");
+        kinds.add("localhost:8080/btree");
+//        kinds.add("动态规划");
         model.addAttribute("kinds", kinds);
         return "index";
     }
