@@ -15,6 +15,7 @@ public class ViewController {
         List<String> kinds = new ArrayList<>();
         kinds.add("localhost:8080/sort");
         kinds.add("localhost:8080/btree");
+        kinds.add("localhost:8080/graph");
 //        kinds.add("动态规划");
         model.addAttribute("kinds", kinds);
         return "index";
@@ -29,6 +30,12 @@ public class ViewController {
     public String sort() {
         return "sort";
     }
+
+    @GetMapping("/graph")
+    public String graph() {
+        return "graph";
+    }
+
 
     @GetMapping("/greet")
     public String greet() {

@@ -21,15 +21,17 @@
         <a href="http://localhost:8080/btree"> Tree</a>
         <a href="http://localhost:8080/graph"> Graph</a>
     </div>
-    <h3>Binary Seach Tree</h3>
+    <h3>Graph Search</h3>
     <div id="set">
         <label>测试用例：</label>
-        <input id="input" type="text" value="84, 24, 57, 87, 13, 9, 56" size="30">
-        <button id="create">创建二叉排序树</button>
-        <button id="inorder">中序遍历</button>
-        <button id="preorder">前序遍历</button>
-        <button id="search">查找n=</button>
-        <input id="num" type="number">
+        <input id="input" type="text"
+               value="[[0,0,0,0,0],[0,1,0,1,0],[0,1,1,0,0],[0,1,1,0,1],[0,0,1,0,0]]" size="60">
+        <button id="create">创建</button>
+        <button id="bfs">BFS</button>
+        <button id="dfs">DFS</button>
+        <button id="search">查找(x,y)</button>
+        <input id="numX" type="number" min="0" max="99">
+        <input id="numY" type="number" min="0" max="99">
     </div>
     <div id="control">
         <button id="preFrame"> <- </button>
@@ -47,6 +49,6 @@
     
 
     <script src="/js/common.js"></script>
-    <script src="/js/btree.js"></script>
+    <script src="/js/graph.js"></script>
 </body>
 </html>

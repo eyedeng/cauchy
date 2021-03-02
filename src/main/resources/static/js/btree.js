@@ -1,11 +1,6 @@
-const svg = d3.select('svg');
-svg.attr('width', Width)
-    .attr('height', Height);
-let frames;
+
 let tree;
-let idx = 0;
 // 操作状态
-let state;
 const States = {
     create: 1,
     inorder: 2,
@@ -41,7 +36,6 @@ document.querySelector("#create").onclick = () => {
         }
     });
 };
-// let changes;
 document.querySelector("#inorder").onclick = () => {
     clearInterval(intervalID);
     $.ajax({
@@ -100,49 +94,7 @@ document.querySelector("#preorder").onclick = () => {
         }
     });
 };
-// timeout = durationT
-let durationT = 1000;
-let rate = 1;
-let timeout = 1000;
-let isPause = false;
-document.querySelector('#pause').onclick = () => {
-    if (!isPause)
-        isPause = true;
-};
 
-document.querySelector('#play').onclick = () => {
-    if (isPause) {
-        isPause = false;
-        drawFrames();
-    }
-};
-document.querySelector('#preFrame').onclick = () => {
-    // pause时 且不为0
-    if (isPause && idx > 0) {
-        idx =  idx - 1;
-        drawOneFrame();
-    }
-};
-document.querySelector('#nextFrame').onclick = () => {
-    // pause时
-    if (isPause && idx < frames.length-1) {
-        idx = idx + 1;
-        drawOneFrame();
-    }
-};
-document.querySelector('#clearing').onclick = () => {
-    if (idx !== 0) {
-        idx = 0;
-        // 清除此函数
-        clearInterval(intervalID);
-        state = States.create;
-        drawOneFrame();
-    }
-};
-
-document.querySelector('#speed2').onclick = () => {rate = 1.5; durationT = rate * durationT; timeout = durationT};
-document.querySelector('#speed3').onclick = () => {rate = 1;  durationT = rate * durationT; timeout = durationT};
-document.querySelector('#speed4').onclick = () => {rate = 0.5;  durationT = rate * durationT; timeout = durationT};
 
 let vertexGroup ;
 let edgeGroup;
@@ -188,66 +140,6 @@ function creatDraw() {
         .attr('id', d => d.id);
 }
 
-// function drawByIdx() {
-//     console.log(idx);
-//     let circle = changes[idx].circle;
-//     let line = changes[idx].line;
-//     let text = changes[idx].text;
-//     if (circle != null) {
-//         d3.select(`#${circle.id}`)
-//             .transition()
-//             .duration(durationT)
-//             .attr('stroke', Color[circle.stroke])
-//             .attr('fill', Color[circle.fill]);
-//     }
-//     if (text != null) {
-//         d3.select(`#${text.id}`)
-//             .transition()
-//             .duration(durationT)
-//             .attr('stroke', Color[text.stroke]);
-//     }
-//     if (line != null) {
-//         d3.select(`#${line.id}`)
-//             .transition()
-//             .duration(durationT)
-//             .attr('stroke', Color[line.stroke])
-//             .attr('stroke-width', 3);
-//     }
-// }
-
-// function inOrderDraw() {
-//
-//     let intervalID = setInterval(() => {
-//         if (idx >= changes.length || isPause) {
-//             console.log('clear', idx);
-//             // 当前帧为idx-1
-//             if (isPause) {
-//                 idx = idx - 1;
-//             }
-//             clearInterval(intervalID);
-//         } else {
-//             drawByIdx();
-//             idx = idx + 1;
-//         }
-//     }, timeout);
-// }
-
-let intervalID;
-function drawFrames() {
-    intervalID = setInterval(() => {
-        if (idx >= frames.length || isPause) {
-            console.log('clear', idx);
-            // 当前帧为idx-1 注意溢出
-            if (isPause && idx > 0) {
-                idx = idx - 1;
-            }
-            clearInterval(intervalID);
-        } else {
-            drawOneFrame();
-            idx = idx + 1;
-        }
-    }, timeout);
-}
 
 function drawOneFrame() {
     console.log(idx);

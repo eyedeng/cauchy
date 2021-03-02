@@ -39,7 +39,7 @@ public class TreeController {
     }
 
     @GetMapping("preOrder")
-    public TreeFrame search() {
+    public TreeFrame preOrder() {
         return bstService.preorder();
     }
 }
