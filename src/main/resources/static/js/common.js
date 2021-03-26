@@ -7,7 +7,8 @@ const Color = {
     4: 'green',
     5: 'blue',
     6: 'black',
-    7: 'white'
+    7: 'white',
+    8: '#999'
 };
 const Width = 1000;
 const Height = 570;
@@ -22,8 +23,7 @@ let state;    // 当前运行的算法
 // 操控面板
 let isPause = false;
 document.querySelector('#pause').onclick = () => {
-    if (!isPause)
-        isPause = true;
+    isPause = true;
 };
 
 document.querySelector('#play').onclick = () => {
@@ -60,10 +60,31 @@ document.querySelector('#clearing').onclick = () => {
 const timePerFrame = 1000;  // 1 second/frame
 let durationT = timePerFrame;
 let rate = 1;
-document.querySelector('#speed2').onclick = () => {rate = 1.5; durationT = rate * timePerFrame; };
-document.querySelector('#speed3').onclick = () => {rate = 1;  durationT = rate * timePerFrame; };
-document.querySelector('#speed4').onclick = () => {rate = 0.5;  durationT = rate * timePerFrame; };
-document.querySelector('#speed5').onclick = () => {rate = 0.25;  durationT = rate * timePerFrame; };
+document.querySelector('#speed2').onclick = () => {
+    // 变速要重新创建动画
+    clearInterval(intervalID);
+    rate = 1.5;
+    durationT = rate * timePerFrame;
+    drawFrames();
+};
+document.querySelector('#speed3').onclick = () => {
+    clearInterval(intervalID);
+    rate = 1;
+    durationT = rate * timePerFrame;
+    drawFrames();
+};
+document.querySelector('#speed4').onclick = () => {
+    clearInterval(intervalID);
+    rate = 0.5;
+    durationT = rate * timePerFrame;
+    drawFrames();
+};
+document.querySelector('#speed5').onclick = () => {
+    clearInterval(intervalID);
+    rate = 0.25;
+    durationT = rate * timePerFrame;
+    drawFrames();
+};
 
 // 异步动画
 let intervalID;

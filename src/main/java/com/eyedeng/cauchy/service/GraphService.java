@@ -26,6 +26,8 @@ public class GraphService {
     private final int r = 10;
     private final int edge = 40;
     private final int staX = 100, staY = 20;
+    private Node end;
+
 
 //    public GraphService(){
 //        maze=new int[][]{
@@ -39,7 +41,7 @@ public class GraphService {
 //        visitedSign=new int [N][N];
 //    }
 
-    class Node {        // 节点位置信息
+    static class Node {        // 节点位置信息
 
         int x, y;
         int step;
@@ -75,7 +77,7 @@ public class GraphService {
 //                {0,1,1,0,1,1,0,1,1,1},
 //                {0,0,1,0,0,0,0,0,0,0}
 //        };
-        visited = new int[row][col];
+
 
         MazeFrame mazeFrame = new MazeFrame();
         List<Maze> frames = new ArrayList<>();
@@ -105,6 +107,7 @@ public class GraphService {
     private int Idx(int x, int y) {
         return x * col + y;
     }
+
 
     private boolean bfsProcess(List<Maze> frames){
 
@@ -147,8 +150,7 @@ public class GraphService {
                 }
                 frames.add(ma);
 
-                if (x == row - 1 && y == col - 1 && maze[x][y] == 0
-                        && visited[x][y] == 0) {    // 定义终点的操作
+                if (x == end.x && y == end.y && maze[x][y] == 0) {    // 定义终点的操作
 
                     ma = new Maze(frames.get(frames.size() - 1));
                     ma.getRectGroup().get(idx).setFill(Color.BLUE);  // 已访问
@@ -157,11 +159,11 @@ public class GraphService {
                     Node top = stack.pop();
                     System.out.println("总步数：" + (top.step + 1));
                     System.out.println("逆向路线：");
-                    System.out.println("(" + (row - 1) + "," + (col - 1) + ")");
+                    System.out.println("(" + end.x + "," + end.y + ")");
                     System.out.println("(" + top.x + "," + top.y + ")");
 
                     ma = new Maze(frames.get(frames.size() - 1));
-                    ma.getRectGroup().get(Idx(row - 1, col - 1)).setFill(Color.RED);
+                    ma.getRectGroup().get(Idx(end.x, end.y)).setFill(Color.RED);
                     ma.getRectGroup().get(Idx(top.x, top.y)).setFill(Color.RED);
 
                     int preX = top.preX;
@@ -202,13 +204,70 @@ public class GraphService {
         return false;
     }
 
+    boolean dfsProcess(List<Maze> frames, Node node) {
+        System.out.println(node.x + "," + node.y);
+        int idx = Idx(node.x, node.y);
+        Maze ma = new Maze(frames.get(frames.size() - 1));
+
+        if (node.x == row - 1 && node.y == col - 1) {
+            ma.getRectGroup().get(idx).setFill(Color.RED);
+            frames.add(ma);
+
+            return true;
+        }
+        visited[node.x][node.y] = 1;
+
+
+        Rect visRect = ma.getRectGroup().get(idx);
+        visRect.setFill(Color.BLUE);  // 正在访问
+        frames.add(ma);
+
+        for (int i = 0; i < 4; i++) {
+            int x = node.x + direction[i][0];
+            int y = node.y + direction[i][1];
+
+            ma = new Maze(frames.get(frames.size() - 1));
+            if (i == 0) {      // 左
+                ma.getCircle().setCx(visRect.getX());
+                ma.getCircle().setCy(visRect.getY() + edge / 2);
+            } else if (i == 1) {  // 上
+                ma.getCircle().setCx(visRect.getX() + edge / 2);
+                ma.getCircle().setCy(visRect.getY());
+            } else if (i == 2) {  // 右
+                ma.getCircle().setCx(visRect.getX() + edge);
+                ma.getCircle().setCy(visRect.getY() + edge / 2);
+            } else {               // 下
+                ma.getCircle().setCx(visRect.getX() + edge / 2);
+                ma.getCircle().setCy(visRect.getY() + edge);
+            }
+            frames.add(ma);
+
+            if (x >= 0 && x < row && y >= 0 && y < col && maze[x][y] == 0
+                    && visited[x][y] == 0) {
+
+                if (dfsProcess(frames, new Node(x, y, node.x, node.y, node.step + 1))) {
+                    return true;
+                }
+
+                ma = new Maze(frames.get(frames.size() - 1));
+                ma.getRectGroup().get(Idx(x, y)).setFill(Color.GREEN);  // 回溯
+                frames.add(ma);
+
+            }
+
+        }
+        return false;
+    }
 
     public MazeFrame bfs() {
         MazeFrame mazeFrame = new MazeFrame();
         List<Maze> frames = new ArrayList<>();
         frames.add(initMaze);
+
+        visited = new int[row][col];
+        end = new Node(row - 1, col - 1, 0, 0, 0);
         if (!bfsProcess(frames)) {
-            System.out.println("找不到");
+            System.out.println("Not found.");
         }
         mazeFrame.setFrames(frames);
         return mazeFrame;
@@ -216,14 +275,36 @@ public class GraphService {
 
     public MazeFrame dfs() {
         MazeFrame mazeFrame = new MazeFrame();
+        List<Maze> frames = new ArrayList<>();
+        frames.add(initMaze);
 
+        visited = new int[row][col];
+        end = new Node(row - 1, col - 1, 0, 0, 0);
+        if (!dfsProcess(frames, new Node(0,0, 0, 0, 0)))
+            System.out.println("Not found.");
+        mazeFrame.setFrames(frames);
+        return mazeFrame;
+    }
+
+    public MazeFrame search(int x, int y) {
+        System.out.println(x + "--" + y);
+        MazeFrame mazeFrame = new MazeFrame();
+        List<Maze> frames = new ArrayList<>();
+        frames.add(initMaze);
+
+        visited = new int[row][col];
+        end = new Node(x, y, 0, 0, 0);
+        if (!bfsProcess(frames)) {
+            System.out.println("Not found.");
+        }
+        mazeFrame.setFrames(frames);
         return mazeFrame;
     }
 
     public static void main(String[] args) {
 
         GraphService service = new GraphService();
-        if (!service.bfsProcess(null)) {
+        if (!service.dfsProcess(null, new Node(0,0, 0, 0, 0))) {
             System.out.println("找不到");
         }
     }

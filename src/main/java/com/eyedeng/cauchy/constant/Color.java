@@ -8,5 +8,6 @@ public class Color {
     public static final int BLUE = 5;
     public static final int BLACK = 6;
     public static final int WHITE = 7;
+    public static final int GRAY = 8;
 
 }

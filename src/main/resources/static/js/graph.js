@@ -5,6 +5,7 @@ const States = {
     create: 1,
     bfs: 2,
     dfs: 3,
+    search: 4
 };
 document.querySelector("#create").onclick = () => {
     clearInterval(intervalID);
@@ -70,6 +71,39 @@ document.querySelector("#dfs").onclick = () => {
             drawFrames();
         },
         error : function(e) {
+            alert("Error!");
+            console.log("ERROR: ", e);
+        }
+    });
+};
+
+document.querySelector("#search").onclick = () => {
+    clearInterval(intervalID);
+    let nx = document.querySelector("#numX").value;
+
+    let ny = document.querySelector("#numY").value;
+    nx = parseInt(nx);
+    ny = parseInt(ny);
+    console.log(nx, ny);
+    let formData = {
+        x: nx,
+        y: ny
+    };
+
+    $.ajax({
+        type: "POST",
+        contentType: "application/json",  // 必需
+        url: "api/graph/search",
+        data: JSON.stringify(formData),
+        dataType: 'json',
+        success: function (response) {
+            // console.log(response);
+            frames = response.frames;
+            idx = 0;
+            state = States.search;
+            drawFrames();
+        },
+        error: function (e) {
             alert("Error!");
             console.log("ERROR: ", e);
         }
