@@ -1,10 +1,7 @@
 package com.eyedeng.cauchy.service;
 
 import com.eyedeng.cauchy.constant.Color;
-import com.eyedeng.cauchy.domain.Circle;
-import com.eyedeng.cauchy.domain.Maze;
-import com.eyedeng.cauchy.domain.MazeFrame;
-import com.eyedeng.cauchy.domain.Rect;
+import com.eyedeng.cauchy.domain.*;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -28,18 +25,12 @@ public class GraphService {
     private final int staX = 100, staY = 20;
     private Node end;
 
-
-//    public GraphService(){
-//        maze=new int[][]{
 //                {0,0,0,0,0},
 //                {0,1,0,1,0},
 //                {0,1,1,0,0},
 //                {0,1,1,0,1},
 //                {0,0,1,0,0}
-//        };
-//        N = 5;
-//        visitedSign=new int [N][N];
-//    }
+
 
     static class Node {        // 节点位置信息
 
@@ -85,6 +76,7 @@ public class GraphService {
         List<Rect> rectGroup = new ArrayList<>();
 
         Circle circle = new Circle(staX, staY + edge/2, r, Color.BLUE, Color.WHITE, "");
+        Text text = new Text(staX, staY + edge * (maze.length + 1), Color.BLACK,"创建迷宫矩阵。黑：不可走；白：可走", "");
         for (int i = 0; i < maze.length; i++) {
             for (int j = 0; j < maze[0].length; j++) {
                 Rect rect = new Rect(staX + edge * j, staY + edge * i, edge, edge, Color.WHITE);
@@ -96,6 +88,7 @@ public class GraphService {
         }
         initMaze.setCircle(circle);
         initMaze.setRectGroup(rectGroup);
+        initMaze.setDescription(text);
         frames.add(initMaze);
         mazeFrame.setFrames(frames);
         System.out.println("---create---");
@@ -116,6 +109,8 @@ public class GraphService {
         Deque<Node> stack = new LinkedList<>();
         visited[node.x][node.y] = 1;
         queue.offer(node);
+        String pathStr = "";
+
 
         while(!queue.isEmpty()){
             Node head = queue.poll();
@@ -128,6 +123,9 @@ public class GraphService {
             Maze ma = new Maze(frames.get(frames.size() - 1));
             Rect visRect = ma.getRectGroup().get(idx);
             visRect.setFill(Color.YELLOW);  // 正在访问
+
+            pathStr = "队头<- " + printPath(queue) + " <-队尾 ";
+            ma.getDescription().setText(pathStr + "\n 出队(" + (head.x+1) + "," + (head.y+1) + ")");
             frames.add(ma);
 
             for (int i = 0; i < 4; i++) {                //四个方向依次判断
@@ -138,15 +136,19 @@ public class GraphService {
                 if (i == 0) {      // 左
                     ma.getCircle().setCx(visRect.getX());
                     ma.getCircle().setCy(visRect.getY() + edge / 2);
+                    ma.getDescription().setText(pathStr + "\n 向左试探");
                 } else if (i == 1) {  // 上
                     ma.getCircle().setCx(visRect.getX() + edge / 2);
                     ma.getCircle().setCy(visRect.getY());
+                    ma.getDescription().setText(pathStr + "\n 向上试探");
                 } else if (i == 2) {  // 右
                     ma.getCircle().setCx(visRect.getX() + edge);
                     ma.getCircle().setCy(visRect.getY() + edge / 2);
+                    ma.getDescription().setText(pathStr + "\n 向右试探");
                 } else {               // 下
                     ma.getCircle().setCx(visRect.getX() + edge / 2);
                     ma.getCircle().setCy(visRect.getY() + edge);
+                    ma.getDescription().setText(pathStr + "\n 向下试探");
                 }
                 frames.add(ma);
 
@@ -154,6 +156,10 @@ public class GraphService {
 
                     ma = new Maze(frames.get(frames.size() - 1));
                     ma.getRectGroup().get(idx).setFill(Color.BLUE);  // 已访问
+
+                    queue.offer(new Node(x, y, 0,0,0));
+                    pathStr = "队头<- " + printPath(queue) + " <-队尾 ";
+                    ma.getDescription().setText(pathStr + "\n 入队(" + (x+1) + "," + (y+1) + ")");
                     frames.add(ma);
 
                     Node top = stack.pop();
@@ -180,6 +186,7 @@ public class GraphService {
                         }
                     }
                     ma.getCircle().setFill(Color.RED);
+                    ma.getDescription().setText(pathStr + "\n 找到了！");
                     frames.add(ma);
 
                     return true;
@@ -189,9 +196,11 @@ public class GraphService {
                     Node newNode = new Node(x, y, head.x, head.y, head.step + 1);
                     visited[x][y] = 1;
                     queue.offer(newNode);
+                    pathStr = "队头<- " + printPath(queue) + " <-队尾 ";
 
                     ma = new Maze(frames.get(frames.size() - 1));
                     ma.getRectGroup().get(Idx(x, y)).setFill(Color.GREEN);    // 入队，将访问
+                    ma.getDescription().setText(pathStr + "\n 入队(" + (x+1) + "," + (y+1) + ")");
                     frames.add(ma);
                 }
             }
@@ -204,22 +213,51 @@ public class GraphService {
         return false;
     }
 
-    boolean dfsProcess(List<Maze> frames, Node node) {
+    private String printPath(Queue<Node> queue) {
+        StringBuffer sb = new StringBuffer();
+        Queue<Node> q = new ArrayDeque<>(queue);
+        if (q.isEmpty()) {
+            return "空";
+        }
+        while (!q.isEmpty()) {
+            Node node = q.poll();
+            sb.append("(" + (node.x+1) + "," + (node.y+1) + ") ");
+        }
+        return sb.toString();
+    }
+
+    private String printPath(Deque<Node> path) {
+        StringBuffer sb = new StringBuffer();
+        Deque<Node> p = new ArrayDeque<>(path);
+        if (p.isEmpty()) {
+            return "空";
+        }
+        while (!p.isEmpty()) {
+            Node node = p.pop();
+            sb.append("(" + (node.x+1) + "," + (node.y+1) + ") ");
+        }
+        return sb.toString();
+    }
+
+    boolean dfsProcess(List<Maze> frames, Node node, Deque<Node> path) {
         System.out.println(node.x + "," + node.y);
+        path.push(node);
+        String pathStr = "栈顶<- " + printPath(path) + " _]栈底 ";
         int idx = Idx(node.x, node.y);
         Maze ma = new Maze(frames.get(frames.size() - 1));
 
         if (node.x == row - 1 && node.y == col - 1) {
             ma.getRectGroup().get(idx).setFill(Color.RED);
+            ma.getDescription().setText(pathStr + "\n 找到了！");
             frames.add(ma);
 
             return true;
         }
         visited[node.x][node.y] = 1;
 
-
         Rect visRect = ma.getRectGroup().get(idx);
         visRect.setFill(Color.BLUE);  // 正在访问
+        ma.getDescription().setText(pathStr + "\n 入栈(" + node.x + "," + node.y + ")");
         frames.add(ma);
 
         for (int i = 0; i < 4; i++) {
@@ -230,27 +268,34 @@ public class GraphService {
             if (i == 0) {      // 左
                 ma.getCircle().setCx(visRect.getX());
                 ma.getCircle().setCy(visRect.getY() + edge / 2);
+                ma.getDescription().setText(pathStr + "\n 向左试探");
             } else if (i == 1) {  // 上
                 ma.getCircle().setCx(visRect.getX() + edge / 2);
                 ma.getCircle().setCy(visRect.getY());
+                ma.getDescription().setText(pathStr + "\n 向上试探");
             } else if (i == 2) {  // 右
                 ma.getCircle().setCx(visRect.getX() + edge);
                 ma.getCircle().setCy(visRect.getY() + edge / 2);
+                ma.getDescription().setText(pathStr + "\n 向右试探");
             } else {               // 下
                 ma.getCircle().setCx(visRect.getX() + edge / 2);
                 ma.getCircle().setCy(visRect.getY() + edge);
+                ma.getDescription().setText(pathStr + "\n 向下试探");
             }
             frames.add(ma);
 
             if (x >= 0 && x < row && y >= 0 && y < col && maze[x][y] == 0
                     && visited[x][y] == 0) {
 
-                if (dfsProcess(frames, new Node(x, y, node.x, node.y, node.step + 1))) {
+                if (dfsProcess(frames, new Node(x, y, node.x, node.y, node.step + 1), path)) {
                     return true;
                 }
 
                 ma = new Maze(frames.get(frames.size() - 1));
                 ma.getRectGroup().get(Idx(x, y)).setFill(Color.GREEN);  // 回溯
+                path.pop();
+                pathStr = "栈顶<- " + printPath(path) + " _]栈底 ";
+                ma.getDescription().setText(pathStr + "\n 退栈：(" + x + "," + y + ")");
                 frames.add(ma);
 
             }
@@ -280,7 +325,8 @@ public class GraphService {
 
         visited = new int[row][col];
         end = new Node(row - 1, col - 1, 0, 0, 0);
-        if (!dfsProcess(frames, new Node(0,0, 0, 0, 0)))
+        Deque<Node> path = new ArrayDeque<>();
+        if (!dfsProcess(frames, new Node(0,0, 0, 0, 0), path))
             System.out.println("Not found.");
         mazeFrame.setFrames(frames);
         return mazeFrame;
@@ -303,10 +349,7 @@ public class GraphService {
 
     public static void main(String[] args) {
 
-        GraphService service = new GraphService();
-        if (!service.dfsProcess(null, new Node(0,0, 0, 0, 0))) {
-            System.out.println("找不到");
-        }
+
     }
 
 }

@@ -113,12 +113,14 @@ document.querySelector("#search").onclick = () => {
 
 let rectGroup;
 let circleOne;
+let description;
 function creatDraw() {
     maze = frames[idx];
     console.log(maze);
     d3.selectAll('g').remove();
     rectGroup = svg.append('g');
     circleOne = svg.append('g');
+    description = svg.append('g');
 
     circleOne.selectAll('circle').data([maze.circle]).enter().append('circle')
         .attr('cx', d => d.cx )
@@ -134,6 +136,12 @@ function creatDraw() {
         .attr('height', d => d.height )
         .attr('fill', d => Color[d.fill] )
         .attr('stroke', "black" );
+
+    description.selectAll('text').data([maze.description]).enter().append('text')
+        .attr('x', d => d.x)
+        .attr('y', d => d.y)
+        .attr('stroke', d => Color[d.stroke])
+        .text(d => d.text);
 
 }
 
@@ -159,5 +167,8 @@ function drawOneFrame() {
         .attr('height', d => d.height )
         .attr('fill', d => Color[d.fill] )
         .attr('stroke', "black" );
+
+    description.selectAll('text').data([maze.description])
+        .text(d => d.text);
 
 }
